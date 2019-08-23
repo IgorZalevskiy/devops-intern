@@ -20,11 +20,39 @@
       state: present
 
   - name: Install Docker-compose 
+    become: yes
     get_url:
-    url: "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-{{ansible_system}}-{{ansible_architecture}}"
-    dest: /usr/local/bin/docker-compose
-    mode: +x
+     url: "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-{{ansible_system}}-{{ansible_architecture}}"
+     dest: /usr/local/bin/docker-compose
+     mode: +x
   
   - name: Install Nginx
-     yum: pkg=nginx state=latest
+    apt: 
+      name=nginx
+      state=present 
 
+  - name: Start nginx service
+    service:
+     name: nginx
+     state: started
+  
+  - name: Copy my conf
+    copy:
+     src: apispa.conf
+     dest: /etc/nginx/sites-available/apispa.conf
+    notify:
+     - restart nginx
+
+  - name: Link my conf
+    file:
+     src: /etc/nginx/sites-available/apispa.conf
+     dest: /etc/nginx/sites-enabled/apispa.conf
+     state: link
+   notify:
+    - restart nginx
+
+  - name: Add user
+    user:
+     name: operator
+     state: present
+  
